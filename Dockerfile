@@ -1,6 +1,6 @@
-FROM mariadb:10.5
+FROM mariadb:11.5.2
 LABEL maintainer "Alice Su <toalice@protonmail.com>" architecture="AMD64/x86_64"
-LABEL mariadb-version="10.5"
+LABEL mariadb-version="11.5.2"
 
 ARG COMMIT_TIME
 ARG CI_APPLICATION_TAG_SHORT
@@ -35,6 +35,7 @@ RUN set -eux; \
 		php-mysql \
         python3 \
         python3-pip \
+		python3-yaml \
 		pv \
         supervisor \
 		unzip \
@@ -54,7 +55,7 @@ RUN { \
 		echo 'ignore_repeated_errors = On'; \
 		echo 'ignore_repeated_source = Off'; \
 		echo 'html_errors = Off'; \
-	} > /etc/php/7.4/apache2/conf.d/10-error-logging.ini
+	} > /etc/php/8.3/apache2/conf.d/10-error-logging.ini
 
 RUN set -eux; \
 	a2enmod rewrite expires; \
@@ -75,8 +76,8 @@ RUN set -eux; \
 # (replace all instances of "%h" with "%a" in LogFormat)
 	find /etc/apache2 -type f -name '*.conf' -exec sed -ri 's/([[:space:]]*LogFormat[[:space:]]+"[^"]*)%h([^"]*")/\1%a\2/g' '{}' +
 
-ENV WORDPRESS_VERSION 5.7
-ENV WORDPRESS_SHA1 76d1332cfcbc5f8b17151b357999d1f758faf897
+ENV WORDPRESS_VERSION 6.6
+ENV WORDPRESS_SHA1 6bdc580973c6c5e44c0c6164c348217152874817
 
 RUN set -ex; \
 	curl -o wordpress.tar.gz -fSL "https://wordpress.org/wordpress-${WORDPRESS_VERSION}.tar.gz"; \
@@ -94,8 +95,7 @@ RUN set -ex; \
 	chown -R www-data:www-data wp-content; \
 	chmod -R 777 wp-content
 
-RUN pip3 install pyyaml
-RUN pip3 install scheduler-cron
+RUN pip3 install scheduler-cron --break-system-packages
 
 RUN rm /etc/apache2/sites-enabled/000-default.conf
 RUN rm -rf /var/www/html/*
